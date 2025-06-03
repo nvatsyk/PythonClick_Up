@@ -1,11 +1,8 @@
-# This config was automatically generated from your source code
-# Stacks detected: deps:python:.
 version: 2.1
 orbs:
   python: circleci/python@2
 jobs:
   test-python:
-    # Install dependencies and run tests
     docker:
       - image: cimg/python:3.8-node
     steps:
@@ -16,19 +13,28 @@ jobs:
           command: pytest --junitxml=junit.xml || ((($? == 5)) && echo 'Did not find any tests to run.')
       - store_test_results:
           path: junit.xml
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
+  e2e-playwright:
     docker:
-      - image: cimg/base:stable
+      - image: mcr.microsoft.com/playwright:v1.44.1-jammy
     steps:
-      # Replace this with steps to deploy to users
+      - checkout
       - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Install dependencies
+          command: npm ci
+      - run:
+          name: Install Playwright browsers
+          command: npx playwright install --with-deps
+      - run:
+          name: Run Playwright end-to-end tests
+          command: npx playwright test
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
 workflows:
   build-and-test:
     jobs:
       - test-python
-    # - deploy:
-    #     requires:
-    #       - test-python
+      - e2e-playwright:
+          requires:
+            - test-python
