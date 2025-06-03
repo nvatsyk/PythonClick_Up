@@ -1,0 +1,36 @@
+version: 2.1
+
+jobs:
+  python-job:
+    docker:
+      - image: cimg/python:3.10.1-node
+    steps:
+      - checkout
+
+      - run:
+          name: Set up virtual environment
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+
+      - run:
+          name: Install dependencies
+          command: |
+            . venv/bin/activate
+            pip install -r requirements.txt
+
+      - run:
+          name: Run tests
+          command: |
+            . venv/bin/activate
+            pytest --template=html1/index.html --report=report.html
+
+      - store_artifacts:
+          path: report.html
+          destination: test-report
+
+workflows:
+  version: 2
+  test-workflow:
+    jobs:
+      - python-job
